@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rayanami00 - Welcome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Mulish:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(180deg, #021133 0%, #000412 100%);
+            color: white;
+            font-family: 'Mulish', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .site-title {
+            font-family: 'Kalam', cursive;
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            color: #E2E8F0;
+        }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group input {
+            width: 100%; padding: 12px; border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.2); color: white; outline: none;
+        }
+        .btn-login {
+            width: 100%; padding: 12px; border-radius: 8px; border: none;
+            background: #2563eb; color: white; font-weight: bold; cursor: pointer;
+        }
+        .btn-login:hover { background: #1d4ed8; }
+        .divider { margin: 20px 0; font-size: 0.85rem; color: #64748b; }
+        .btn-viewer {
+            display: block; width: 100%; padding: 12px; border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3); background: transparent;
+            color: #E2E8F0; font-weight: bold; text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1 class="site-title">rayanami00</h1>
+        <form id="adminForm">
+            <div class="input-group"><input type="email" placeholder="Username / Email" required></div>
+            <div class="input-group"><input type="password" placeholder="Password" required></div>
+            <button type="submit" class="btn-login">Login Admin</button>
+        </form>
+        <div class="divider">atau</div>
+        <a href="home.html" id="btnViewer" class="btn-viewer">View Mode (Pembaca)</a>
+    </div>
+
+    <script>
+        document.getElementById('adminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            localStorage.setItem('role', 'admin');
+            window.location.href = "home.html";
+        });
+        document.getElementById('btnViewer').addEventListener('click', function() {
+            localStorage.setItem('role', 'viewer');
+        });
+    </script>
+</body>
+</html>

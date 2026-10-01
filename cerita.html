@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baca Karya - rayanami00</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(180deg, #021133 0%, #000412 100%);
+            color: #E2E8F0; font-family: 'Mulish', sans-serif;
+            min-height: 100vh; padding: 20px 15px; display: flex; justify-content: center;
+        }
+        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; }
+        .top-nav { width: 100%; margin-bottom: 10px; }
+        .btn-back { color: #94A3B8; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+        
+        .site-title { font-family: 'Kalam', cursive; font-size: 2.6rem; color: #E2E8F0; margin-bottom: 20px; }
+        
+        .author-profile { width: 100%; display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .avatar {
+            width: 65px; height: 65px; border-radius: 50%; background-color: #FFFFFF;
+            display: flex; justify-content: center; align-items: center; color: #021133;
+            font-size: 0.7rem; font-weight: 700; overflow: hidden; background-size: cover; background-position: center;
+        }
+        .author-name { font-size: 1.5rem; font-weight: 600; color: #FFFFFF; }
+
+        .title-capsule {
+            width: 100%; padding: 14px 20px; border-radius: 50px;
+            border: 2px solid #0f2b5c; background: rgba(2, 17, 51, 0.6);
+            text-align: center; margin-bottom: 25px;
+        }
+        .title-text { font-size: 1.05rem; font-weight: 800; color: #E2E8F0; text-transform: uppercase; }
+
+        .reading-sheet {
+            width: 100%; background-color: #FFFFFF; color: #1E293B;
+            border-radius: 24px; padding: 30px 24px; min-height: 480px;
+            line-height: 1.8; font-size: 1rem; white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="top-nav"><a href="home.html" class="btn-back">← Kembali</a></div>
+        <h1 class="site-title">rayanami00</h1>
+
+        <div class="author-profile">
+            <div class="avatar" id="authorAvatar"><span>foto</span></div>
+            <h2 class="author-name" id="authorNameDisplay">nama penulis</h2>
+        </div>
+
+        <div class="title-capsule">
+            <h3 class="title-text" id="karyaTitleDisplay">JUDUL KARYA</h3>
+        </div>
+
+        <main class="reading-sheet" id="karyaContentDisplay"></main>
+    </div>
+
+    <script>
+        // Load Author Profile Data
+        const authorNameDisplay = document.getElementById('authorNameDisplay');
+        const authorAvatar = document.getElementById('authorAvatar');
+        
+        if (localStorage.getItem('savedAdminName')) authorNameDisplay.innerText = localStorage.getItem('savedAdminName');
+        if (localStorage.getItem('savedAdminPhoto')) {
+            authorAvatar.style.backgroundImage = `url(${localStorage.getItem('savedAdminPhoto')})`;
+            authorAvatar.innerHTML = '';
+        }
+
+        // Load Karya Content
+        const urlParams = new URLSearchParams(window.location.search);
+        const karyaId = urlParams.get('id');
+        const listKarya = JSON.parse(localStorage.getItem('listKarya')) || [];
+        
+        const target = listKarya.find(k => k.id == karyaId);
+        if (target) {
+            document.getElementById('karyaTitleDisplay').innerText = target.judul;
+            document.getElementById('karyaContentDisplay').innerText = target.isi;
+        }
+    </script>
+</body>
+</html>
