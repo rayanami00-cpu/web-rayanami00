@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>rayanami00 - Ruang Baca</title>
     <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -29,7 +30,6 @@
         .karya-judul { font-weight: 700; font-size: 0.95rem; color: #E2E8F0; margin-bottom: 4px; }
         .karya-tanggal { font-weight: 400; font-size: 0.8rem; color: #94A3B8; text-transform: uppercase; }
 
-        /* SLIDER ADMIN */
         .admin-slider {
             position: fixed; top: 18%; left: 0; width: 210px;
             background: linear-gradient(180deg, rgba(2, 22, 64, 0.96) 0%, rgba(1, 10, 31, 0.98) 100%);
@@ -57,7 +57,6 @@
 
     <header><h1 class="site-title">rayanami00</h1></header>
 
-    <!-- SLIDER ADMIN -->
     <aside id="adminSlider" class="admin-slider" style="display: none;">
         <label for="uploadPhotoInput" class="profile-upload" id="profileBox">
             <span id="profileText">add photo</span>
@@ -67,16 +66,19 @@
         <a href="form-karya.html?mode=add" class="btn-karya-baru">karya baru</a>
     </aside>
 
-    <!-- GRID KARYA -->
     <main class="content-grid" id="katalogGrid"></main>
 
     <a href="index.html" class="btn-back-login">← Keluar ke Halaman Awal</a>
 
     <script>
+        const SUPABASE_URL = "https://lzcvyeafnksaoecepcwz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_6C8omETdQ0wAfyzql73xTg_e5nDsrBK";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const isAdmin = localStorage.getItem('role') === 'admin';
         if (isAdmin) document.getElementById('adminSlider').style.display = 'flex';
 
-        // 1. Load Profile Data
+        // Profil Admin
         const accountName = document.getElementById('accountName');
         const profileBox = document.getElementById('profileBox');
         const profileText = document.getElementById('profileText');
@@ -102,32 +104,38 @@
             }
         });
 
-        // 2. Load Katalog Karya
-        const defaultKarya = [
-            { id: 1, judul: "Judul Karya Pertama", tanggal: "12 OKTOBER 2026", cover: "", isi: "Ini isi karya cerita pertama..." },
-            { id: 2, judul: "Judul Karya Kedua", tanggal: "10 OKTOBER 2026", cover: "", isi: "Ini isi karya cerita kedua..." }
-        ];
+        // Muat Karya dari Supabase Database (Tabel 'tulisan')
+        async function fetchKarya() {
+            const { data: listKarya, error } = await _supabase
+                .from('tulisan')
+                .select('*')
+                .order('id', { ascending: false });
 
-        let listKarya = JSON.parse(localStorage.getItem('listKarya')) || defaultKarya;
-        localStorage.setItem('listKarya', JSON.stringify(listKarya));
+            const katalogGrid = document.getElementById('katalogGrid');
+            katalogGrid.innerHTML = '';
 
-        const katalogGrid = document.getElementById('katalogGrid');
-        katalogGrid.innerHTML = '';
+            if (error || !listKarya || listKarya.length === 0) {
+                katalogGrid.innerHTML = '<p style="grid-column: span 2; text-align: center; color: #94A3B8;">Belum ada karya yang diunggah.</p>';
+                return;
+            }
 
-        listKarya.forEach(item => {
-            const linkTarget = isAdmin ? `form-karya.html?mode=edit&id=${item.id}` : `cerita.html?id=${item.id}`;
-            const coverStyle = item.cover ? `style="background-image: url('${item.cover}');"` : '';
-            
-            katalogGrid.innerHTML += `
-                <a href="${linkTarget}" class="card">
-                    <div class="cover-area" ${coverStyle}></div>
-                    <div class="card-info">
-                        <h2 class="karya-judul">${item.judul}</h2>
-                        <p class="karya-tanggal">${item.tanggal}</p>
-                    </div>
-                </a>
-            `;
-        });
+            listKarya.forEach(item => {
+                const linkTarget = isAdmin ? `form-karya.html?mode=edit&id=${item.id}` : `cerita.html?id=${item.id}`;
+                const coverStyle = item.cover ? `style="background-image: url('${item.cover}');"` : '';
+                
+                katalogGrid.innerHTML += `
+                    <a href="${linkTarget}" class="card">
+                        <div class="cover-area" ${coverStyle}></div>
+                        <div class="card-info">
+                            <h2 class="karya-judul">${item.judul}</h2>
+                            <p class="karya-tanggal">${item.tanggal}</p>
+                        </div>
+                    </a>
+                `;
+            });
+        }
+
+        fetchKarya();
     </script>
 </body>
 </html>

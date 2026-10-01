@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baca Karya - rayanami00</title>
     <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -36,7 +37,12 @@
         .reading-sheet {
             width: 100%; background-color: #FFFFFF; color: #1E293B;
             border-radius: 24px; padding: 30px 24px; min-height: 480px;
-            line-height: 1.8; font-size: 1rem; white-space: pre-line;
+            line-height: 1.8; font-size: 1rem;
+        }
+
+        .reading-sheet p {
+            margin-bottom: 16px;
+            text-align: justify;
         }
     </style>
 </head>
@@ -59,7 +65,10 @@
     </div>
 
     <script>
-        // Load Author Profile Data
+        const SUPABASE_URL = "https://lzcvyeafnksaoecepcwz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_6C8omETdQ0wAfyzql73xTg_e5nDsrBK";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const authorNameDisplay = document.getElementById('authorNameDisplay');
         const authorAvatar = document.getElementById('authorAvatar');
         
@@ -69,16 +78,25 @@
             authorAvatar.innerHTML = '';
         }
 
-        // Load Karya Content
         const urlParams = new URLSearchParams(window.location.search);
         const karyaId = urlParams.get('id');
-        const listKarya = JSON.parse(localStorage.getItem('listKarya')) || [];
         
-        const target = listKarya.find(k => k.id == karyaId);
-        if (target) {
-            document.getElementById('karyaTitleDisplay').innerText = target.judul;
-            document.getElementById('karyaContentDisplay').innerText = target.isi;
+        async function loadCerita() {
+            if (karyaId) {
+                const { data: target, error } = await _supabase
+                    .from('tulisan')
+                    .select('*')
+                    .eq('id', karyaId)
+                    .single();
+
+                if (target) {
+                    document.getElementById('karyaTitleDisplay').innerText = target.judul;
+                    document.getElementById('karyaContentDisplay').innerHTML = target.isi;
+                }
+            }
         }
+
+        loadCerita();
     </script>
 </body>
 </html>

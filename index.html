@@ -57,9 +57,7 @@
     <div class="login-box">
         <h1 class="site-title">rayanami00</h1>
         <form id="adminForm">
-            <!-- Ditambahkan id="email" -->
             <div class="input-group"><input type="email" id="email" placeholder="Username / Email" required></div>
-            <!-- Ditambahkan id="password" -->
             <div class="input-group"><input type="password" id="password" placeholder="Password" required></div>
             <button type="submit" class="btn-login">Login Admin</button>
         </form>
@@ -68,18 +66,15 @@
     </div>
 
     <script>
-        // Tentukan Email dan Password Khusus Admin di sini (Ubah sesuai keinginanmu)
         const ADMIN_EMAIL = "syayid145@gmail.com"; 
         const ADMIN_PASSWORD = "Ranggawisman12";       
 
-        // Validasi saat tombol Login Admin diklik
         document.getElementById('adminForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const emailInput = document.getElementById('email').value.trim();
             const passwordInput = document.getElementById('password').value;
 
-            // Cek apakah Email dan Password sesuai
             if (emailInput === ADMIN_EMAIL && passwordInput === ADMIN_PASSWORD) {
                 localStorage.setItem('role', 'admin');
                 alert('Login Admin Berhasil!');
@@ -89,7 +84,6 @@
             }
         });
 
-        // Set role sebagai viewer saat klik tombol View Mode
         document.getElementById('btnViewer').addEventListener('click', function() {
             localStorage.setItem('role', 'viewer');
         });

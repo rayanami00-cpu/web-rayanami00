@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Karya - rayanami00</title>
     <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Library Mammoth.js untuk membaca file .docx Word dengan sempurna -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -17,7 +17,6 @@
         .site-title { font-family: 'Kalam', cursive; font-size: 2.8rem; color: #E2E8F0; margin-bottom: 30px; }
         .form-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
 
-        /* Upload Cover Box */
         .cover-picker {
             width: 170px; height: 230px; background: rgba(255, 255, 255, 0.12);
             border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px;
@@ -26,7 +25,6 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
         
-        /* Input Pill Styles */
         .pill-input {
             width: 100%; padding: 14px 20px; border-radius: 50px;
             border: 2px solid #0f2b5c; background: rgba(2, 17, 51, 0.8);
@@ -39,7 +37,6 @@
             color: #CBD5E1; text-align: center; cursor: pointer; font-size: 1rem;
         }
 
-        /* Action Buttons Wrapper */
         .action-row {
             width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 15px;
         }
@@ -64,21 +61,17 @@
     <h1 class="site-title">rayanami00</h1>
 
     <div class="form-container">
-        <!-- Box Cover -->
         <label for="coverFile" class="cover-picker" id="coverDisplay">
             <span id="coverText">upload cover</span>
         </label>
         <input type="file" id="coverFile" accept="image/*" style="display: none;">
 
-        <!-- Input Judul -->
         <input type="text" id="judulInput" class="pill-input" placeholder="judul">
 
-        <!-- Upload Doc/Txt/Docx -->
         <label for="docFile" class="file-label" id="docText">upload .docx / .txt</label>
         <input type="file" id="docFile" accept=".docx,.txt" style="display: none;">
 
         <div class="action-row">
-            <!-- Tombol Hapus Karya (Hanya muncul jika mode Edit) -->
             <button class="btn-delete" id="btnDelete" style="display: none;">🗑 Hapus Karya</button>
             <div style="flex-grow: 1;"></div>
             <button class="btn-next" id="btnSave">next upload</button>
@@ -86,11 +79,14 @@
     </div>
 
     <script>
+        const SUPABASE_URL = "https://lzcvyeafnksaoecepcwz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_6C8omETdQ0wAfyzql73xTg_e5nDsrBK";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode'); // 'add' atau 'edit'
+        const mode = urlParams.get('mode');
         const karyaId = urlParams.get('id');
 
-        let listKarya = JSON.parse(localStorage.getItem('listKarya')) || [];
         let currentCover = "";
         let currentContent = "";
 
@@ -100,23 +96,24 @@
         const docText = document.getElementById('docText');
         const btnDelete = document.getElementById('btnDelete');
 
-        // Jika Mode Edit: Tampilkan data lama + Aktifkan Tombol Hapus
-        if (mode === 'edit' && karyaId) {
-            btnDelete.style.display = 'block';
-            const target = listKarya.find(k => k.id == karyaId);
-            if (target) {
-                judulInput.value = target.judul;
-                currentContent = target.isi;
-                if (target.cover) {
-                    currentCover = target.cover;
-                    coverDisplay.style.backgroundImage = `url('${target.cover}')`;
-                    coverText.style.display = 'none';
+        async function loadDataForEdit() {
+            if (mode === 'edit' && karyaId) {
+                btnDelete.style.display = 'block';
+                const { data: target, error } = await _supabase.from('tulisan').select('*').eq('id', karyaId).single();
+                if (target) {
+                    judulInput.value = target.judul;
+                    currentContent = target.isi;
+                    if (target.cover) {
+                        currentCover = target.cover;
+                        coverDisplay.style.backgroundImage = `url('${target.cover}')`;
+                        coverText.style.display = 'none';
+                    }
+                    coverText.innerText = 'edited cover';
                 }
-                coverText.innerText = 'edited cover';
             }
         }
+        loadDataForEdit();
 
-        // Preview Foto Cover
         document.getElementById('coverFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -130,7 +127,6 @@
             }
         });
 
-        // Membaca File Dokumen (.docx via Mammoth.js atau .txt)
         document.getElementById('docFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -138,13 +134,11 @@
             docText.innerText = file.name;
 
             if (file.name.endsWith('.docx')) {
-                // Konversi .docx ke HTML Teks Rapi
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    const arrayBuffer = evt.target.result;
-                    mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                    mammoth.convertToHtml({ arrayBuffer: evt.target.result })
                         .then(function(result) {
-                            currentContent = result.value; // Hasil pembacaan dokumen yang bersih
+                            currentContent = result.value;
                         })
                         .catch(function(err) {
                             alert("Gagal membaca file .docx: " + err.message);
@@ -152,7 +146,6 @@
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                // Membaca file .txt biasa
                 const reader = new FileReader();
                 reader.onload = function(evt) {
                     currentContent = evt.target.result;
@@ -161,40 +154,50 @@
             }
         });
 
-        // Simpan / Update Karya
-        document.getElementById('btnSave').addEventListener('click', function() {
+        document.getElementById('btnSave').addEventListener('click', async function() {
             const judulVal = judulInput.value || "Tanpa Judul";
             
             if (mode === 'edit' && karyaId) {
-                const idx = listKarya.findIndex(k => k.id == karyaId);
-                if (idx !== -1) {
-                    listKarya[idx].judul = judulVal;
-                    if (currentCover) listKarya[idx].cover = currentCover;
-                    if (currentContent) listKarya[idx].isi = currentContent;
+                const { error } = await _supabase
+                    .from('tulisan')
+                    .update({ 
+                        judul: judulVal, 
+                        cover: currentCover, 
+                        isi: currentContent 
+                    })
+                    .eq('id', karyaId);
+
+                if (error) alert("Gagal memperbarui: " + error.message);
+                else {
+                    alert('Karya berhasil diperbarui!');
+                    window.location.href = 'home.html';
                 }
             } else {
                 const newKarya = {
-                    id: Date.now(),
                     judul: judulVal,
                     tanggal: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase(),
                     cover: currentCover,
                     isi: currentContent || "Belum ada isi tulisan."
                 };
-                listKarya.unshift(newKarya);
-            }
 
-            localStorage.setItem('listKarya', JSON.stringify(listKarya));
-            alert('Karya berhasil disimpan!');
-            window.location.href = 'home.html';
+                const { error } = await _supabase.from('tulisan').insert([newKarya]);
+
+                if (error) alert("Gagal menyimpan: " + error.message);
+                else {
+                    alert('Karya berhasil dipublikasikan!');
+                    window.location.href = 'home.html';
+                }
+            }
         });
 
-        // Fitur Hapus Karya
-        btnDelete.addEventListener('click', function() {
+        btnDelete.addEventListener('click', async function() {
             if (confirm('Apakah kamu yakin ingin menghapus karya ini?')) {
-                listKarya = listKarya.filter(k => k.id != karyaId);
-                localStorage.setItem('listKarya', JSON.stringify(listKarya));
-                alert('Karya berhasil dihapus.');
-                window.location.href = 'home.html';
+                const { error } = await _supabase.from('tulisan').delete().eq('id', karyaId);
+                if (error) alert("Gagal menghapus: " + error.message);
+                else {
+                    alert('Karya berhasil dihapus.');
+                    window.location.href = 'home.html';
+                }
             }
         });
     </script>
