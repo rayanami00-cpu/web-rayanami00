@@ -30,21 +30,32 @@
         .karya-judul { font-weight: 700; font-size: 0.95rem; color: #E2E8F0; margin-bottom: 4px; }
         .karya-tanggal { font-weight: 400; font-size: 0.8rem; color: #94A3B8; text-transform: uppercase; }
 
+        /* SLIDER ADMIN & SETTING PROFIL */
         .admin-slider {
-            position: fixed; top: 18%; left: 0; width: 210px;
+            position: fixed; top: 12%; left: 0; width: 230px;
             background: linear-gradient(180deg, rgba(2, 22, 64, 0.96) 0%, rgba(1, 10, 31, 0.98) 100%);
             border: 1px solid rgba(255, 255, 255, 0.15); border-left: none;
-            border-radius: 0 24px 24px 0; padding: 30px 20px;
+            border-radius: 0 24px 24px 0; padding: 25px 18px;
             display: flex; flex-direction: column; align-items: center;
             box-shadow: 8px 8px 25px rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); z-index: 100;
         }
         .profile-upload {
-            width: 90px; height: 90px; border-radius: 50%; background-color: #FFFFFF;
+            width: 85px; height: 85px; border-radius: 50%; background-color: #FFFFFF;
             border: 3px solid #000412; display: flex; justify-content: center; align-items: center;
-            color: #1E293B; font-size: 0.8rem; font-weight: 700; cursor: pointer;
-            margin-bottom: 12px; overflow: hidden; background-size: cover; background-position: center;
+            color: #1E293B; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+            margin-bottom: 10px; overflow: hidden; background-size: cover; background-position: center;
         }
-        .account-name { font-size: 0.95rem; color: #FFFFFF; font-weight: 600; margin-bottom: 22px; outline: none; }
+        .account-name-input {
+            width: 100%; padding: 8px 12px; border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(0, 0, 0, 0.3);
+            color: white; font-size: 0.85rem; text-align: center; margin-bottom: 10px; outline: none;
+        }
+        .btn-save-profile {
+            background: #10B981; color: white; border: none; padding: 6px 14px;
+            font-size: 0.75rem; font-weight: 700; border-radius: 20px; cursor: pointer;
+            margin-bottom: 18px; transition: background 0.2s;
+        }
+        .btn-save-profile:hover { background: #059669; }
         .btn-karya-baru {
             width: 100%; padding: 12px; border-radius: 50px; border: 2px solid #0f2b5c;
             background: rgba(2, 17, 51, 0.8); color: #FFFFFF; font-weight: 700;
@@ -57,15 +68,20 @@
 
     <header><h1 class="site-title">rayanami00</h1></header>
 
+    <!-- SLIDER ADMIN / SETTING AKUN -->
     <aside id="adminSlider" class="admin-slider" style="display: none;">
         <label for="uploadPhotoInput" class="profile-upload" id="profileBox">
             <span id="profileText">add photo</span>
         </label>
         <input type="file" id="uploadPhotoInput" accept="image/*" style="display: none;">
-        <p class="account-name" id="accountName" contenteditable="true">nama akun</p>
+        
+        <input type="text" id="accountNameInput" class="account-name-input" placeholder="nama penulis">
+        <button id="btnSaveProfile" class="btn-save-profile">💾 Konfirmasi Profil</button>
+
         <a href="form-karya.html?mode=add" class="btn-karya-baru">karya baru</a>
     </aside>
 
+    <!-- GRID KARYA -->
     <main class="content-grid" id="katalogGrid"></main>
 
     <a href="index.html" class="btn-back-login">← Keluar ke Halaman Awal</a>
@@ -78,33 +94,57 @@
         const isAdmin = localStorage.getItem('role') === 'admin';
         if (isAdmin) document.getElementById('adminSlider').style.display = 'flex';
 
-        // Profil Admin
-        const accountName = document.getElementById('accountName');
+        const accountNameInput = document.getElementById('accountNameInput');
         const profileBox = document.getElementById('profileBox');
         const profileText = document.getElementById('profileText');
+        let tempPhotoBase64 = "";
 
-        if (localStorage.getItem('savedAdminName')) accountName.innerText = localStorage.getItem('savedAdminName');
-        accountName.addEventListener('input', () => localStorage.setItem('savedAdminName', accountName.innerText));
-
-        if (localStorage.getItem('savedAdminPhoto')) {
-            profileBox.style.backgroundImage = `url(${localStorage.getItem('savedAdminPhoto')})`;
-            profileText.style.display = 'none';
+        // 1. Load Data Profil dari Supabase
+        async function loadProfileData() {
+            const { data, error } = await _supabase.from('profil').select('*').eq('id', 1).single();
+            if (data) {
+                accountNameInput.value = data.nama || "";
+                if (data.foto) {
+                    tempPhotoBase64 = data.foto;
+                    profileBox.style.backgroundImage = `url('${data.foto}')`;
+                    profileText.style.display = 'none';
+                }
+            }
         }
+        loadProfileData();
 
+        // 2. Pilih Foto Baru (Preview Sementara)
         document.getElementById('uploadPhotoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    localStorage.setItem('savedAdminPhoto', event.target.result);
-                    profileBox.style.backgroundImage = `url(${event.target.result})`;
+                    tempPhotoBase64 = event.target.result;
+                    profileBox.style.backgroundImage = `url('${tempPhotoBase64}')`;
                     profileText.style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Muat Karya dari Supabase Database (Tabel 'tulisan')
+        // 3. Konfirmasi & Simpan Profil ke Supabase
+        document.getElementById('btnSaveProfile').addEventListener('click', async function() {
+            const namaBaru = accountNameInput.value.trim() || "nama penulis";
+
+            const { error } = await _supabase.from('profil').upsert({
+                id: 1,
+                nama: namaBaru,
+                foto: tempPhotoBase64
+            });
+
+            if (error) {
+                alert("Gagal memperbarui profil: " + error.message);
+            } else {
+                alert("Profil penulis berhasil disimpan ke Cloud!");
+            }
+        });
+
+        // 4. Muat Katalog Karya dari Supabase
         async function fetchKarya() {
             const { data: listKarya, error } = await _supabase
                 .from('tulisan')

@@ -72,12 +72,20 @@
         const authorNameDisplay = document.getElementById('authorNameDisplay');
         const authorAvatar = document.getElementById('authorAvatar');
         
-        if (localStorage.getItem('savedAdminName')) authorNameDisplay.innerText = localStorage.getItem('savedAdminName');
-        if (localStorage.getItem('savedAdminPhoto')) {
-            authorAvatar.style.backgroundImage = `url(${localStorage.getItem('savedAdminPhoto')})`;
-            authorAvatar.innerHTML = '';
+        // 1. Ambil Profil Penulis dari Supabase
+        async function loadAuthorProfile() {
+            const { data } = await _supabase.from('profil').select('*').eq('id', 1).single();
+            if (data) {
+                if (data.nama) authorNameDisplay.innerText = data.nama;
+                if (data.foto) {
+                    authorAvatar.style.backgroundImage = `url('${data.foto}')`;
+                    authorAvatar.innerHTML = '';
+                }
+            }
         }
+        loadAuthorProfile();
 
+        // 2. Ambil Cerita dari Supabase Database
         const urlParams = new URLSearchParams(window.location.search);
         const karyaId = urlParams.get('id');
         
