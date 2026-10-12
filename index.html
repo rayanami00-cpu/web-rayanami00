@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>rayanami00 - Welcome</title>
     <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Mulish:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -43,8 +45,10 @@
         .btn-login {
             width: 100%; padding: 12px; border-radius: 8px; border: none;
             background: #2563eb; color: white; font-weight: bold; cursor: pointer;
+            transition: background 0.2s;
         }
         .btn-login:hover { background: #1d4ed8; }
+        .btn-login:disabled { background: #64748b; cursor: not-allowed; }
         .divider { margin: 20px 0; font-size: 0.85rem; color: #64748b; }
         .btn-viewer {
             display: block; width: 100%; padding: 12px; border-radius: 8px;
@@ -59,31 +63,49 @@
         <form id="adminForm">
             <div class="input-group"><input type="email" id="email" placeholder="Username / Email" required></div>
             <div class="input-group"><input type="password" id="password" placeholder="Password" required></div>
-            <button type="submit" class="btn-login">Login Admin</button>
+            <button type="submit" id="btnLogin" class="btn-login">Login Admin</button>
         </form>
         <div class="divider">atau</div>
         <a href="home.html" id="btnViewer" class="btn-viewer">View Mode (Pembaca)</a>
     </div>
 
     <script>
-        const ADMIN_EMAIL = "syayid145@gmail.com"; 
-        const ADMIN_PASSWORD = "Ranggawisman12";       
+        // Konfigurasi Kunci Supabase
+        const SUPABASE_URL = "https://lzcvyeafnksaoecepcwz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_6C8omETdQ0wAfyzql73xTg_e5nDsrBK";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        document.getElementById('adminForm').addEventListener('submit', function(e) {
+        const adminForm = document.getElementById('adminForm');
+        const btnLogin = document.getElementById('btnLogin');
+
+        // Login Admin via Supabase Auth
+        adminForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const emailInput = document.getElementById('email').value.trim();
             const passwordInput = document.getElementById('password').value;
 
-            if (emailInput === ADMIN_EMAIL && passwordInput === ADMIN_PASSWORD) {
+            btnLogin.disabled = true;
+            btnLogin.innerText = "Proses Login...";
+
+            // Autentikasi langsung ke Supabase
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: emailInput,
+                password: passwordInput
+            });
+
+            if (error) {
+                alert("Login Gagal: " + error.message);
+                btnLogin.disabled = false;
+                btnLogin.innerText = "Login Admin";
+            } else {
                 localStorage.setItem('role', 'admin');
                 alert('Login Admin Berhasil!');
                 window.location.href = "home.html";
-            } else {
-                alert('Email atau Password salah! Akses ditolak.');
             }
         });
 
+        // Set role pembaca saat menekan tombol View Mode
         document.getElementById('btnViewer').addEventListener('click', function() {
             localStorage.setItem('role', 'viewer');
         });
